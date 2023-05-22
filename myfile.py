@@ -14,7 +14,6 @@ chart_data = pd.DataFrame(
     np.random.randn(20, 3),
     columns=['a', 'b', 'c']
 )
-print(chart_data)
 
 st.line_chart(chart_data)
 
@@ -22,5 +21,4 @@ df = pd.DataFrame({
     'first column': [1, 2, 3, 4],
     'second column': [10, 20, 30, 40]
 })
-print(df)
 st.line_chart(df)
