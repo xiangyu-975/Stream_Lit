@@ -13,7 +13,8 @@ from streamlit_lottie import st_lottie
 from streamlit_option_menu import option_menu
 
 from login_auth_ui.utils import *
-from settings import ui_conf
+
+ui_url = 'https://assets8.lottiefiles.com/packages/lf20_ktwnwv5m.json'
 
 
 class Login:
@@ -21,7 +22,7 @@ class Login:
 
     def __init__(self, auth_token: str, company_name: str, width, height, logout_button_name: str = 'Logout',
                  hide_menu_bool: bool = False, hide_footer_bool: bool = False,
-                 lottie_url: str = ui_conf):
+                 lottie_url: str = ui_url):
         """
         参数含义
         :param auth_token:接收到唯一的授权令牌
@@ -53,7 +54,7 @@ class Login:
 
     def animation(self):
         """渲染页面"""
-        lottie_json = self.lottie_url
+        lottie_json = load_lottieurl(self.lottie_url)
         st_lottie(lottie_json, width=self.width, height=self.height)
 
     def sign_up_widget(self):
