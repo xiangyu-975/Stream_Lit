@@ -6,5 +6,8 @@
 @File    : __init__.py.py
 @Software: PyCharm
 """
+<<<<<<< HEAD
 
 from login_auth_ui.login import Login
+=======
+>>>>>>> origin/master
