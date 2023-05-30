@@ -15,8 +15,6 @@ import requests
 from argon2 import PasswordHasher
 from trycourier import Courier
 
-from constants import new_user_data
-
 ph = PasswordHasher()
 logger = logging.getLogger(__name__)
 
@@ -29,7 +27,7 @@ def check_current_passwd(email_reset_passwd: str, current_passwd: str) -> bool:
         for user in authorized_users_data:
             if user['email'] == email_reset_passwd:
                 try:
-                    if ph.verify(user['password'], current_passwd) == True:
+                    if ph.verify(user['password'], current_passwd):
                         return True
                 except Exception as e:
                     logger.error(e)
@@ -84,13 +82,14 @@ def generate_random_passwd() -> str:
     return secrets.token_urlsafe(password_length)
 
 
-def register_new_user(name_sign_up, email_sign_up, password_sign_up, username_sign_up: str) -> None:
+def register_new_user(name_sign_up: str, email_sign_up: str, password_sign_up: str, username_sign_up: str) -> None:
     """注册新用户,新用户信息存入Json文件"""
-    new_user = new_user_data
-    new_user['username'] = username_sign_up
-    new_user['email'] = email_sign_up
-    new_user['name'] = name_sign_up
-    new_user['password'] = password_sign_up
+    new_user_data: dict = {
+        'username': username_sign_up,
+        'name': name_sign_up,
+        'email': email_sign_up,
+        'password': ph.hash(password_sign_up)
+    }
 
     with open('_secret_auth_.json', 'r') as auth_json:
         authorized_user_data = json.load(auth_json)
@@ -128,12 +127,12 @@ def check_unique_user(username_sign_up: str) -> bool:
 
     no_empty_check = non_empty_str_check(username_sign_up)
 
-    if no_empty_check == False:
+    if not no_empty_check:
         return None
     return True
 
 
-def check_unique_email(emial_sign_up: str) -> bool:
+def check_unique_email(email_sign_up: str) -> bool:
     """检查邮箱是否唯一"""
     authorized_user_data_master = list()
     with open('_secret_auth_.json', 'r') as auth_json:
@@ -142,7 +141,7 @@ def check_unique_email(emial_sign_up: str) -> bool:
         for user in authorized_users_data:
             authorized_user_data_master.append(user['email'])
 
-    if emial_sign_up in authorized_user_data_master:
+    if email_sign_up in authorized_user_data_master:
         return False
     return True
 

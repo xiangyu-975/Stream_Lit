@@ -75,7 +75,7 @@ class Login:
         lottie_json = load_lottieurl(self.lottie_url)
         st_lottie(lottie_json, width=self.width, height=self.height)
 
-    def sign_up_widget(self):
+    def sign_up_widget(self) -> None:
         """注册组件,存入json密钥"""
         with st.form("Sign Up Form"):
             name_sign_up = st.text_input('Name *', placeholder='Please enter your name')
@@ -94,27 +94,31 @@ class Login:
             sign_up_submit_button = st.form_submit_button(label='Register')
 
             if sign_up_submit_button:
-                if valid_name_check == False:
+                if not valid_name_check:
                     st.error('Please enter a valid name!')
-                elif valid_email_check == False:
+
+                elif not valid_email_check:
                     st.error('Please enter a valid Email!')
-                elif unique_email_check == False:
+
+                elif not unique_email_check:
                     st.error('Email already exists!')
-                elif unique_username_check == False:
+
+                elif not unique_username_check:
                     st.error(f'Sorry, username {username_sign_up} already exists!')
-                elif unique_username_check == None:
+
+                elif not unique_username_check:
                     st.error('Please enter a non - empty Username')
 
                 if valid_name_check:
                     if valid_email_check:
-                        if unique_username_check:
-                            if unique_email_check:
+                        if unique_email_check:
+                            if unique_username_check:
                                 register_new_user(name_sign_up, email_sign_up, username_sign_up, password_sign_up)
                                 st.success('Registration Successful!')
 
     def get_username(self):
         """获取登陆的用户名"""
-        if st.session_state['LOGOUT_BUTTON_HIT'] == False:
+        if not st.session_state['LOGOUT_BUTTON_HIT']:
             fetched_cookies = self.cookies
             if '__streamlit_login_signup_ui_username__' in fetched_cookies.keys():
                 username = fetched_cookies.get('__streamlit_login_signup_ui_username__', '')
@@ -130,12 +134,13 @@ class Login:
             forgot_passwd_submit_button = st.form_submit_button(label='Get Password')
 
             if forgot_passwd_submit_button:
-                if email_exists_check == False:
+                if not email_exists_check:
                     st.error('Email ID not registered with us!')
 
-                if email_exists_check == True:
+                if email_exists_check:
                     random_password = generate_random_passwd()
-                    send_passwd_in_email(self.auth_token, username_forgot_passwd, email_exists_check, self.company_name,
+                    send_passwd_in_email(self.auth_token, username_forgot_passwd, email_forgot_password,
+                                         self.company_name,
                                          random_password)
                     change_passwd(email_forgot_password, random_password)
                     st.success("Secure Password Sent Successfully!")
@@ -143,15 +148,15 @@ class Login:
     def login_widget(self) -> None:
         """创建登陆功能，检车用户名，密码，cookie"""
         # 检测cookie是否存在
-        if st.session_state['LOGGED_IN'] == False:
-            if st.session_state['LOGOUT_BUTTON_HIT'] == False:
+        if not st.session_state['LOGGED_IN']:
+            if not st.session_state['LOGOUT_BUTTON_HIT']:
                 fetched_cookies = self.cookies
                 if '__streamlit_login_signup_ui_username__' in fetched_cookies.keys():
                     if fetched_cookies.get('__streamlit_login_signup_ui_username__',
                                            '') != '8be4544f-a3d2-7e86-ca20-c914acac1bfa':
                         st.session_state['LOGGED_IN'] = True
 
-        if st.session_state['LOGGED_IN'] == False:
+        if not st.session_state['LOGGED_IN']:
             st.session_state['LOGOUT_BUTTON_HIT'] = False
 
             del_login = st.empty()
@@ -165,7 +170,7 @@ class Login:
                 if login_submit_button:
                     authenticate_user_check = check_user_pass(username, password)
 
-                    if authenticate_user_check == False:
+                    if not authenticate_user_check:
                         st.error('Invalid Username or Password!')
 
                     else:
@@ -207,16 +212,17 @@ class Login:
             reset_passwd_submit_button = st.form_submit_button(label='Reset Password')
 
             if reset_passwd_submit_button:
-                if email_exists_check == False:
+                if not email_exists_check:
                     st.error('Email does no exists!')
 
-                elif current_passwd_check == False:
+                elif not current_passwd_check:
                     st.error('Incorrect temporary password!')
 
                 elif new_passwd != new_passwd_1:
                     st.error("Password don't match!")
-                if email_exists_check == True:
-                    if current_passwd_check == True:
+
+                if email_exists_check:
+                    if current_passwd_check:
                         change_passwd(email_reset_passwd, new_passwd)
                         st.success('Password Reset successfully!')
 
@@ -231,8 +237,7 @@ class Login:
                 options=['Login', 'Create Account', 'Forgot Password?', 'Reset Password'],
                 styles={
                     'container': {'padding': '5px'},
-                    'nav-link': {'font-size': '14pz', 'text-algin': 'left', 'margin': '0px'}
-                })
+                    'nav-link': {'font-size': '14pz', 'text-algin': 'left', 'margin': '0px'}})
         return main_page_sidebar, selected_option
 
     def hide_menu(self) -> None:
@@ -253,7 +258,7 @@ class Login:
 
         auth_json_exists_bool = self.check_auth_json_file_exists('_secret_auth_.json')
 
-        if auth_json_exists_bool == False:
+        if not auth_json_exists_bool:
             with open('_secret_auth_.json', 'w') as auth_json:
                 json.dump([], auth_json)
 
@@ -264,7 +269,7 @@ class Login:
             with c1:
                 self.login_widget()
             with c2:
-                if st.session_state['LOGGED_IN'] == False:
+                if not st.session_state['LOGGED_IN']:
                     self.animation()
 
         if selected_option == 'Create Account':
@@ -278,5 +283,13 @@ class Login:
 
         self.logout_widget()
 
-        if st.session_state['LOGGED_IN'] == True:
+        if st.session_state['LOGGED_IN']:
             main_page_sidebar.empty()
+
+        if self.hide_menu_bool:
+            self.hide_menu()
+
+        if self.hide_footer_bool:
+            self.hide_footer()
+
+        return st.session_state['LOGGED_IN']
