@@ -1,2 +1,2 @@
 # Stream_Lit
-this is a future manager project
+this is a dex manager project

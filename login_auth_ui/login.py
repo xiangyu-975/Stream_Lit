@@ -6,6 +6,7 @@
 @File    : login.py.py
 @Software: PyCharm
 """
+import os
 
 import streamlit as st
 from streamlit_cookies_manager import EncryptedCookieManager
@@ -35,7 +36,7 @@ class Login:
         :param lottie_url:登陆页面的动画配置
         """
         self.auth_token = auth_token
-        self.company = company_name
+        self.company_name = company_name
         self.width = width
         self.height = height
         self.logout_button_name = logout_button_name
@@ -51,6 +52,23 @@ class Login:
 
         if not self.cookies.ready():
             st.stop()
+
+    def check_auth_json_file_exists(self, auth_filename: str) -> bool:
+        """检查文件存储是否存在"""
+        file_names = []
+        for path in os.listdir('/'):
+            if os.path.isfile(os.path.join('./', path)):
+                file_names.append(path)
+
+        present_files = []
+        for file_name in file_names:
+            if auth_filename in file_name:
+                present_files.append(file_name)
+
+            present_files = sorted(present_files)
+            if len(present_files) > 0:
+                return True
+        return False
 
     def animation(self):
         """渲染页面"""
@@ -91,7 +109,7 @@ class Login:
                     if valid_email_check:
                         if unique_username_check:
                             if unique_email_check:
-                                resiger_new_str(name_sign_up, email_sign_up, username_sign_up, password_sign_up)
+                                register_new_user(name_sign_up, email_sign_up, username_sign_up, password_sign_up)
                                 st.success('Registration Successful!')
 
     def get_username(self):
@@ -101,6 +119,26 @@ class Login:
             if '__streamlit_login_signup_ui_username__' in fetched_cookies.keys():
                 username = fetched_cookies.get('__streamlit_login_signup_ui_username__', '')
                 return username
+
+    def forgot_password(self):
+        """找回密码组件"""
+        with st.form("Forgot Password Form"):
+            email_forgot_password = st.text_input('Email', placeholder='Please enter your email')
+            email_exists_check, username_forgot_passwd = check_email_exists(email_forgot_password)
+
+            st.markdown('###')
+            forgot_passwd_submit_button = st.form_submit_button(label='Get Password')
+
+            if forgot_passwd_submit_button:
+                if email_exists_check == False:
+                    st.error('Email ID not registered with us!')
+
+                if email_exists_check == True:
+                    random_password = generate_random_passwd()
+                    send_passwd_in_email(self.auth_token, username_forgot_passwd, email_exists_check, self.company_name,
+                                         random_password)
+                    change_passwd(email_forgot_password, random_password)
+                    st.success("Secure Password Sent Successfully!")
 
     def login_widget(self) -> None:
         """创建登陆功能，检车用户名，密码，cookie"""
@@ -131,7 +169,7 @@ class Login:
                         st.error('Invalid Username or Password!')
 
                     else:
-                        st.session_state['LOGGER_IN'] = True
+                        st.session_state['LOGGED_IN'] = True
                         self.cookies['__streamlit_login_signup_ui_username__'] = username
                         self.cookies.save()
                         del_login.empty()
@@ -150,6 +188,37 @@ class Login:
                 self.cookies['__streamlit_login_signup_ui_username__'] = '8be4544f-a3d2-7e86-ca20-c914acac1bfa'
                 del_logout.empty()
                 st.experimental_rerun()
+
+    def reset_password(self) -> None:
+        """重置密码"""
+        with st.form('Reset Password Form'):
+            email_reset_passwd = st.text_input('Email', placeholder='Please enter your email')
+            email_exists_check, user_reset_passwd = check_email_exists(email_reset_passwd)
+
+            current_passwd = st.text_input('Temporary Password',
+                                           placeholder='Please enter the password you received in the email')
+            current_passwd_check = check_current_passwd(email_reset_passwd, current_passwd)
+
+            new_passwd = st.text_input('New Password', placeholder='Please enter a new,strong password',
+                                       type='password')
+            new_passwd_1 = st.text_input('Re - Enter New Password', placeholder='Please re- enter the new password',
+                                         type='password')
+            st.markdown('###')
+            reset_passwd_submit_button = st.form_submit_button(label='Reset Password')
+
+            if reset_passwd_submit_button:
+                if email_exists_check == False:
+                    st.error('Email does no exists!')
+
+                elif current_passwd_check == False:
+                    st.error('Incorrect temporary password!')
+
+                elif new_passwd != new_passwd_1:
+                    st.error("Password don't match!")
+                if email_exists_check == True:
+                    if current_passwd_check == True:
+                        change_passwd(email_reset_passwd, new_passwd)
+                        st.success('Password Reset successfully!')
 
     def nav_sidebar(self):
         """创建侧边导航栏"""

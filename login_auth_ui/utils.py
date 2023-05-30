@@ -9,12 +9,95 @@
 import json
 import logging
 import re
+import secrets
 
 import requests
 from argon2 import PasswordHasher
+from trycourier import Courier
+
+from constants import new_user_data
 
 ph = PasswordHasher()
 logger = logging.getLogger(__name__)
+
+
+def check_current_passwd(email_reset_passwd: str, current_passwd: str) -> bool:
+    """检查当前密码"""
+    with open('_secret_auth_.json', 'r') as auth_json:
+        authorized_users_data = json.load(auth_json)
+
+        for user in authorized_users_data:
+            if user['email'] == email_reset_passwd:
+                try:
+                    if ph.verify(user['password'], current_passwd) == True:
+                        return True
+                except Exception as e:
+                    logger.error(e)
+    return False
+
+
+def check_email_exists(email_forgot_password: str):
+    """检查邮箱是否存在"""
+    with open('_secret_auth_.json', 'r') as auth_json:
+        authorized_users_data = json.load(auth_json)
+
+        for user in authorized_users_data:
+            if user['email'] == email_forgot_password:
+                return True, user['email']
+    return False, None
+
+
+def send_passwd_in_email(auth_token: str, username_forget_passwd: str, email_forgot_passwd: str, company_name: str,
+                         random_passwd: str) -> None:
+    """发送验证码"""
+    client = Courier(auth_token=auth_token)
+
+    resp = client.send_message(
+        message={
+            'to': {
+                'email': email_forgot_passwd,
+            },
+            'content': {
+                'title': company_name + ': Login PassWord!',
+                'body': 'Hi! ' + username_forget_passwd + ',' + '\n' + '\n' + 'Your temporary login passwd is: ' + random_passwd + '\n' + '\n' + '{{info}}',
+            },
+            'data': {
+                'info': 'Please reset your password at the earliest for security reasons.'
+            }
+        })
+
+
+def change_passwd(email_: str, random_passwd: str) -> None:
+    """更新密码"""
+    with open('_secret_auth_.json', 'r') as auth_json:
+        authorized_users_data = json.load(auth_json)
+    with open('_secret_auth_.json', 'w') as auth_json:
+        for user in authorized_users_data:
+            if user['email'] == email_:
+                user['passwd'] = ph.hash(random_passwd)
+        json.dump(authorized_users_data, auth_json)
+
+
+def generate_random_passwd() -> str:
+    """验证码生成"""
+    password_length = 10
+    return secrets.token_urlsafe(password_length)
+
+
+def register_new_user(name_sign_up, email_sign_up, password_sign_up, username_sign_up: str) -> None:
+    """注册新用户,新用户信息存入Json文件"""
+    new_user = new_user_data
+    new_user['username'] = username_sign_up
+    new_user['email'] = email_sign_up
+    new_user['name'] = name_sign_up
+    new_user['password'] = password_sign_up
+
+    with open('_secret_auth_.json', 'r') as auth_json:
+        authorized_user_data = json.load(auth_json)
+
+    with open('_secret_auth_.json', 'w') as auth_json_write:
+        authorized_user_data.append(new_user_data)
+        json.dump(authorized_user_data, auth_json_write)
 
 
 def non_empty_str_check(username_sign_up: str) -> bool:
@@ -34,7 +117,7 @@ def non_empty_str_check(username_sign_up: str) -> bool:
 def check_unique_user(username_sign_up: str) -> bool:
     """检查用户是否唯一"""
     authorized_user_data_master = list()
-    with open('../_secret_auth_.json', 'r') as auth_json:
+    with open('_secret_auth_.json', 'r') as auth_json:
         authorized_users_data = json.load(auth_json)
 
         for user in authorized_users_data:
@@ -53,7 +136,7 @@ def check_unique_user(username_sign_up: str) -> bool:
 def check_unique_email(emial_sign_up: str) -> bool:
     """检查邮箱是否唯一"""
     authorized_user_data_master = list()
-    with open('../_secret_auth_.json', 'r') as auth_json:
+    with open('_secret_auth_.json', 'r') as auth_json:
         authorized_users_data = json.load(auth_json)
 
         for user in authorized_users_data:
@@ -82,7 +165,7 @@ def check_valid_name(name_sign_up: str) -> bool:
 
 def check_user_pass(username: str, password: str) -> bool:
     """验证用户信息"""
-    with open('../_secret_auth_.json', 'r') as auth_json:
+    with open('_secret_auth_.json', 'r') as auth_json:
         authorized_user_data = json.load(auth_json)
 
     for registered_user in authorized_user_data:
