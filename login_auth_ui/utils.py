@@ -10,6 +10,7 @@ import json
 import logging
 import re
 import secrets
+from typing import Union
 
 import requests
 from argon2 import PasswordHasher
@@ -82,7 +83,7 @@ def generate_random_passwd() -> str:
     return secrets.token_urlsafe(password_length)
 
 
-def register_new_user(name_sign_up: str, email_sign_up: str, password_sign_up: str, username_sign_up: str) -> None:
+def register_new_user(name_sign_up: str, email_sign_up: str, username_sign_up: str, password_sign_up: str) -> None:
     """注册新用户,新用户信息存入Json文件"""
     new_user_data: dict = {
         'username': username_sign_up,
@@ -113,8 +114,8 @@ def non_empty_str_check(username_sign_up: str) -> bool:
     return True
 
 
-def check_unique_user(username_sign_up: str) -> bool:
-    """检查用户是否唯一"""
+def check_unique_user(username_sign_up: str) -> Union[bool, None]:
+    """检测用户名是否唯一"""
     authorized_user_data_master = list()
     with open('_secret_auth_.json', 'r') as auth_json:
         authorized_users_data = json.load(auth_json)
@@ -123,13 +124,26 @@ def check_unique_user(username_sign_up: str) -> bool:
             authorized_user_data_master.append(user['username'])
 
     if username_sign_up in authorized_user_data_master:
-        return False
+        return True
+    non_empty_check = non_empty_str_check(username_sign_up)
 
-    no_empty_check = non_empty_str_check(username_sign_up)
-
-    if not no_empty_check:
+    if not non_empty_check:
         return None
     return True
+
+
+def check_username_exists(user_name: str) -> bool:
+    """检查用户是否唯一"""
+    authorized_user_data_master = list()
+    with open('_secret_auth_.json', 'r') as auth_json:
+        authorized_users_data = json.load(auth_json)
+
+        for user in authorized_users_data:
+            authorized_user_data_master.append(user['username'])
+
+    if user_name in authorized_user_data_master:
+        return True
+    return False
 
 
 def check_unique_email(email_sign_up: str) -> bool:
@@ -178,7 +192,7 @@ def check_user_pass(username: str, password: str) -> bool:
     return False
 
 
-def load_lottieurl(url: str) -> str:
+def load_lottieurl(url: str) -> Union[None, str]:
     """使用url获取lottie动画"""
     try:
         r = requests.get(url)

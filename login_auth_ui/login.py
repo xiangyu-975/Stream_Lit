@@ -56,7 +56,7 @@ class Login:
     def check_auth_json_file_exists(self, auth_filename: str) -> bool:
         """检查文件存储是否存在"""
         file_names = []
-        for path in os.listdir('/'):
+        for path in os.listdir('./'):
             if os.path.isfile(os.path.join('./', path)):
                 file_names.append(path)
 
@@ -103,10 +103,10 @@ class Login:
                 elif not unique_email_check:
                     st.error('Email already exists!')
 
-                elif not unique_username_check:
+                elif unique_username_check == False:
                     st.error(f'Sorry, username {username_sign_up} already exists!')
 
-                elif not unique_username_check:
+                elif unique_username_check == None:
                     st.error('Please enter a non - empty Username')
 
                 if valid_name_check:
@@ -146,14 +146,13 @@ class Login:
                     st.success("Secure Password Sent Successfully!")
 
     def login_widget(self) -> None:
-        """创建登陆功能，检车用户名，密码，cookie"""
+        """创建登陆功能，检查用户名，密码，cookie"""
         # 检测cookie是否存在
         if not st.session_state['LOGGED_IN']:
             if not st.session_state['LOGOUT_BUTTON_HIT']:
                 fetched_cookies = self.cookies
                 if '__streamlit_login_signup_ui_username__' in fetched_cookies.keys():
-                    if fetched_cookies.get('__streamlit_login_signup_ui_username__',
-                                           '') != '8be4544f-a3d2-7e86-ca20-c914acac1bfa':
+                    if fetched_cookies['__streamlit_login_signup_ui_username__'] != '8be4544f-a3d2-7e86-ca20-c914acac1bfa':
                         st.session_state['LOGGED_IN'] = True
 
         if not st.session_state['LOGGED_IN']:
