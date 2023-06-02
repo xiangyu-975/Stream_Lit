@@ -230,7 +230,7 @@ class Login:
         main_page_sidebar = st.sidebar.empty()
         with main_page_sidebar:
             selected_option = option_menu(
-                menu_title='Navigation',
+                menu_title='DexManager',
                 menu_icon='list-columns-reverse',
                 icons=['box-arrow-in-right', 'person-plus', 'x-circle', 'arrow-counterclockwise'],
                 options=['Login', 'Create Account', 'Forgot Password?', 'Reset Password'],
